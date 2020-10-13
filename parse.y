@@ -24,7 +24,7 @@ extern int lex_state;
 
 %}
 
-%token STRINGCON CHARCON INTCON EQUALS NOTEQU GREEQU LESEQU GREATE LESSTH
+%token STRINGCON CHARCON INTCON EQUALS NOTEQU GREEQU LESEQU GREATE LESSTH COMMENTCON
 %token ANDCOM ORCOMP SEMIC COMMA LPARN RPARN LBRAC RBRAC LCURL RCURL ABANG
 %token EQUAL ADD SUB MUL DIV ID EXTERN FOR WHILE RETURN IF ELSE
 %token VOID CHAR INT OTHER
@@ -150,8 +150,6 @@ Functionhead
 	: ID LPARN Param_types RPARN  						            {Y_DEBUG_PRINT("Functionhead-1-ID LPARN Param_types LPARN"); }
 	;
 
----------------------------------------------------------------------Help------------------------------
-
 Functionbody
 	:  FunctionBodyBase VariableDeclarations Stmt					{Y_DEBUG_PRINT("Functionbody-1-Varlist-Stmtlist"); }
 	|  Functionbody 
@@ -164,14 +162,13 @@ FunctionBodyBase
 
 VariableDeclarations
     : VariableDeclarationsBase
-    ; VariableDeclarations COMMA VariableDeclarationsBase
+    | VariableDeclarations COMMA VariableDeclarationsBase
+	;
 
 VariableDeclarationsBase
     : 
     | Var_decl
     ;
-
---------------------------------------------------------------------------------------------------------
 
 Stmt
 	: IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE							{ Y_DEBUG_PRINT("Stmt-1-IF Stmt"); }

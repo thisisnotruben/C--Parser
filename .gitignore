@@ -1,0 +1,9 @@
+lex.yy.c
+y.output
+y.tab.c
+y.tab.h
+scanner
+parse
+*.o
+*.txt
+.DS_store
