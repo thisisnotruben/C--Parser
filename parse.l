@@ -2,18 +2,18 @@
 
 #include "y.tab.h"
 
-#define DEBUG_LEX 1
+int input_line_nbr = 1, lex_state = 0;
+
+#define DEBUG_LEX 0
 
 #define DEBUG_PRINT(x, y) \
     if (DEBUG_LEX) \
-        printf("%d\t%s\t%s\n", y, x, yytext)
+        printf("%-10d%-10s%-10s ln: %d\n", y, x, yytext, input_line_nbr)
 
 #ifndef DEBUG_LEX
     #undef DEBUG_PRINT(x, y)
     #define DEBUG_PRINT(x, y)
 #endif // DEBUG_LEX
-
-int input_line_nbr = 1, lex_state = 0;
 
 %}
 
@@ -66,6 +66,9 @@ stringcon           \"({ch}|\n)[^\"]+\"
     "while"         { DEBUG_PRINT("WHILE", WHILE); return WHILE; }
     "return"        { DEBUG_PRINT("RETURN", RETURN); return RETURN; }
     "void"          { DEBUG_PRINT("VOID", VOID); return VOID; }
+    "int"           { DEBUG_PRINT("INT", INT); return INT; }
+    "char"          { DEBUG_PRINT("CHAR", CHAR); return CHAR; }
+	"extern"        { DEBUG_PRINT("EXTERN", EXTERN); return EXTERN; }
     {intcon}        { DEBUG_PRINT("INTCON", INTCON); return INTCON; }
     {charcon}       { DEBUG_PRINT("CHARCON", CHARCON); return CHARCON; }
     {id}            { DEBUG_PRINT("ID", ID); return ID; }
