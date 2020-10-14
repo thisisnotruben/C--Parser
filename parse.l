@@ -68,7 +68,7 @@ stringcon           \"({ch}|\n)[^\"]+\"
     "void"          { DEBUG_PRINT("VOID", VOID); return VOID; }
     "int"           { DEBUG_PRINT("INT", INT); return INT; }
     "char"          { DEBUG_PRINT("CHAR", CHAR); return CHAR; }
-	"extern"        { DEBUG_PRINT("EXTERN", EXTERN); return EXTERN; }
+    "extern"        { DEBUG_PRINT("EXTERN", EXTERN); return EXTERN; }
     {intcon}        { DEBUG_PRINT("INTCON", INTCON); return INTCON; }
     {charcon}       { DEBUG_PRINT("CHARCON", CHARCON); return CHARCON; }
     {id}            { DEBUG_PRINT("ID", ID); return ID; }
@@ -82,7 +82,9 @@ stringcon           \"({ch}|\n)[^\"]+\"
 
     \"              { DEBUG_PRINT("STRINGCON", STRINGCON); BEGIN(INITIAL); return STRINGCON; }
     [^\"\n]         { yymore(); }
+
 }
+
 <COMMENT>{
 
     "*/"            { DEBUG_PRINT("COMMENT", COMMENTCON); BEGIN(INITIAL); }
