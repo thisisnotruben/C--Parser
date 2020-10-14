@@ -46,129 +46,92 @@ extern int lex_state;
 
 %%
 
-/* TODO Function rules need work as I got stuck on this part. Other rules need to
-be cross checked as well, hopefully this is readable, let me know if you have
-any questions about the mess I just made */
-
-
 Prog
-    : ProgDcl
-    | ProgFunc
-    ;
-
-ProgDcl
-    : ProgDclBase
-    | ProgDcl ProgDclBase SEMIC
-
-ProgDclBase
     :
-    | Dcl
+    | ProgDclRep SEMIC
+    | ProgFuncRep
     ;
 
-ProgFunc
-    : ProgFuncBase
-    | ProgFunc ProgFuncBase
-
-ProgFuncBase
-    :
-    | Function
+ProgDclRep
+    : Dcl
+    | ProgDclRep Dcl
     ;
 
+ProgFuncRep
+    : Function
+    | ProgFuncRep Function
+    ;
 
 Dcl
-    : Type Var_decl InsideTopDcl
-    | DclExtern	DclTypeOrVoid ID LPARN Param_types RPARN InsideBottomDcl
-    :
-
-InsideTopDcl
-    : InsideTopDclBase
-    | InsideTopDcl COMMA Var_decl
+    : Type VarDeclRep
+    | DclExternOpt DclTypeOrVoidOpt DclIdRep
     ;
 
-InsideTopDclBase
-    :
-    | Var_decl
+VarDecl
+    : ID
+    | ID LBRAC INTCON RBRAC /* TODO: shift reduce conflict here */
     ;
 
-DclExtern
+Type
+    : CHAR  { Y_DEBUG_PRINT("Type-1-CHAR"); }
+    | INT   { Y_DEBUG_PRINT("Type-2-INT"); }
+    ;
+
+VarDeclRep
+    : VarDecl
+    | VarDeclRep COMMA VarDecl
+    ;
+
+DclExternOpt
     :
     | EXTERN
     ;
 
-DclTypeOrVoid
+DclTypeOrVoidOpt
     :
     | Type
     | VOID
     ;
 
-InsideBottomDcl
-    : InsideBottomDclBase
-    | InsideBottomDcl COMMA ID LPARN Param_types RPARN
-
-InsideBottomDclBase
-    :
-    | ID LPARN Param_types RPARN
+DclIdRep
+    : DclId
+    | DclIdRep COMMA DclId
     ;
 
-
-Var_decl
-    : ID
-    | ID LBRAC INTCON RBRAC
+DclId
+    : ID LPARN ParamTypes RPARN
     ;
 
-Type
-    : CHAR { Y_DEBUG_PRINT("Type-1-CHAR"); }
-    | INT  { Y_DEBUG_PRINT("Type-2-INT"); }
+ParamTypes
+    : VOID                          {Y_DEBUG_PRINT("ParamTypes-1-VOID"); }
+    | ParamDclRep                   {Y_DEBUG_PRINT("ParamTypes-2-ParamDclRep"); }
     ;
 
-Param_types
-    : VOID                                              {Y_DEBUG_PRINT("Param_types-1-VOID"); }
-    | Param_types1                                      {Y_DEBUG_PRINT("Param_types-2-Param_types1"); }
+ParamDclRep
+    : ParamDcl                      {Y_DEBUG_PRINT("ParamDclRep-1-ParamDcl"); }
+    | ParamDclRep COMMA ParamDcl    {Y_DEBUG_PRINT("ParamDclRep-2-ParamDclRep-COMMA-ParamDcl"); }
     ;
 
-Param_types1
-    : Param_type1                                       {Y_DEBUG_PRINT("Param_types1-1-Param_type1"); }
-    | Param_types1 COMMA Param_type1                    {Y_DEBUG_PRINT("Param_types1-2-Param_types1-COMMA-Param_type1"); }
+ParamDcl
+    : Type ID ParamDclBraceOpt      {Y_DEBUG_PRINT("ParamDcl-ID-ParamDclBraceOpt"); }
     ;
 
-Param_type1
-    : Type ID Param_type11                              {Y_DEBUG_PRINT("Param_type1-ID-Param_type11"); }
-    ;
-
-Param_type11
-    :                                                   {Y_DEBUG_PRINT("Param_type11-EMPTY"); }
-    | LBRAC RBRAC                                       {Y_DEBUG_PRINT("Param_type11-LBRAC-RBRAC"); }
+ParamDclBraceOpt
+    :                               {Y_DEBUG_PRINT("ParamDclBraceOpt-EMPTY"); }
+    | LBRAC RBRAC                   {Y_DEBUG_PRINT("ParamDclBraceOpt-LBRAC-RBRAC"); }
     ;
 
 Function
-    : Functionhead LCURL Functionbody RCURL             {Y_DEBUG_PRINT("Function-1-Functionhead-LCURL-Functionbody-RCURL"); }
-    | VOID Functionhead LCURL Functionbody RCURL        {Y_DEBUG_PRINT("Function-2-VOID-Functionhead-LCURL-Functionbody-RCURL"); }
-    | Type Functionhead LCURL Functionbody RCURL        {Y_DEBUG_PRINT("Function-2-Type-Functionhead-LCURL-Functionbody-RCURL"); }
+    : DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL
     ;
 
-Functionhead
-    : ID LPARN Param_types RPARN                        {Y_DEBUG_PRINT("Functionhead-1-ID LPARN Param_types LPARN"); }
-    ;
-
-Functionbody
-    :  FunctionBodyBase VariableDeclarations Stmt       {Y_DEBUG_PRINT("Functionbody-1-Varlist-Stmtlist"); }
-    |  Functionbody
-    ;
-
-FunctionBodyBase
+FunctionVarDeclOpt
     :
-    | Type Var_decl
+    | Type VarDeclRep SEMIC
+    | StmtRep
     ;
 
-VariableDeclarations
-    : VariableDeclarationsBase
-    | VariableDeclarations COMMA VariableDeclarationsBase
-    ;
-
-VariableDeclarationsBase
-    :
-    | Var_decl
-    ;
+/* imported from B-- below */
 
 Stmt
     : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1-IF Stmt"); }
@@ -182,7 +145,6 @@ Stmt
     | LCURL StmtRep RCURL                                                           { Y_DEBUG_PRINT("Stmt-9-LCURL Stmt RCURL Stmt"); }
     | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-10-SEMIC Stmt"); }
     ;
-
 
 Assign
     : ID Assign1 EQUAL Expr                 {Y_DEBUG_PRINT("Assign-1-ID-Assign1-EQUAL-Expr"); }
@@ -222,6 +184,8 @@ Logop
     : ANDCOM                { Y_DEBUG_PRINT("Logop-1-ANDCOM"); }
     | ORCOMP                { Y_DEBUG_PRINT("Logop-2-ORCOMP"); }
     ;
+
+/* util bodies below from the imported B-- */
 
 StmtForAssign
     :
