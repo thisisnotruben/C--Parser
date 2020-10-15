@@ -2,11 +2,11 @@
 
 #include <stdio.h>
 
-#define YDEBUG 0
+#define YDEBUG 1
 
-#define Y_DEBUG_PRINT(x) \
+#define Y_DEBUG_PRINT(x, y) \
     if (YDEBUG) \
-        printf("Yout %s \n ",x)
+        printf("%-25s%-25s ln: %d\n ", x, y, input_line_nbr)
 
 #ifndef YDEBUG
     #undef Y_DEBUG_PRINT(x)
@@ -47,181 +47,181 @@ extern int lex_state;
 %%
 
 Prog
-    :
-    | ProgDclRep SEMIC
+    : 
+    | ProgDclRep
     | ProgFuncRep
     ;
 
 ProgDclRep
-    : Dcl
-    | ProgDclRep Dcl
+    : Dcl SEMIC                                 { Y_DEBUG_PRINT("ProgDclRep-1", "Dcl SEMIC"); }
+    | ProgDclRep Dcl                            { Y_DEBUG_PRINT("ProgDclRep-2", "ProgDclRep Dcl"); }
     ;
 
 ProgFuncRep
-    : Function
-    | ProgFuncRep Function
+    : Function                                  { Y_DEBUG_PRINT("ProgFuncRep-1", "Function"); }
+    | ProgFuncRep Function                      { Y_DEBUG_PRINT("ProgFuncRep-2", "ProgFuncRep Function"); }
     ;
 
 Dcl
-    : Type VarDeclRep
-    | DclExternOpt DclTypeOrVoidOpt DclIdRep
+    : Type VarDeclList                          { Y_DEBUG_PRINT("Dcl-1", "Type VarDeclList"); }
+    | DclExternOpt DclTypeOrVoidOpt DclIdRep    { Y_DEBUG_PRINT("Dcl-2", "DclExternOpt DclTypeOrVoidOpt DclIdRep"); }
     ;
 
 VarDecl
-    : ID
-    | ID LBRAC INTCON RBRAC /* TODO: shift reduce conflict here */
+    : ID                                        { Y_DEBUG_PRINT("VarDecl-1", "ID"); }
+    | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); } /* TODO: shift reduce conflict here */
     ;
 
 Type
-    : CHAR  { Y_DEBUG_PRINT("Type-1-CHAR"); }
-    | INT   { Y_DEBUG_PRINT("Type-2-INT"); }
+    : CHAR                                      { Y_DEBUG_PRINT("Type-1", "CHAR"); }
+    | INT                                       { Y_DEBUG_PRINT("Type-2", "INT"); }
     ;
 
-VarDeclRep
-    : VarDecl
-    | VarDeclRep COMMA VarDecl
+VarDeclList
+    : VarDecl                                   { Y_DEBUG_PRINT("VarDeclList-1", "VarDecl"); }
+    | VarDeclList COMMA VarDecl                 { Y_DEBUG_PRINT("VarDeclList-2", "VarDeclList COMMA VarDecl"); }
     ;
 
 DclExternOpt
-    :
-    | EXTERN
+    :                                           { Y_DEBUG_PRINT("DclExternOpt-1", "Empty"); }
+    | EXTERN                                    { Y_DEBUG_PRINT("DclExternOpt-2", "EXTERN"); }
     ;
 
 DclTypeOrVoidOpt
-    :
-    | Type
-    | VOID
+    :                                           { Y_DEBUG_PRINT("DclTypeOrVoidOpt-1", "Empty"); }
+    | Type                                      { Y_DEBUG_PRINT("DclTypeOrVoidOpt-2", "Type"); }
+    | VOID                                      { Y_DEBUG_PRINT("DclTypeOrVoidOpt-3", "VOID"); }
     ;
 
 DclIdRep
-    : DclId
-    | DclIdRep COMMA DclId
+    : DclId                                     { Y_DEBUG_PRINT("DclIdRep-1", "DclId"); }
+    | DclIdRep COMMA DclId                      { Y_DEBUG_PRINT("DclIdRep-2", "DclIdRep COMMA DclId"); }
     ;
 
 DclId
-    : ID LPARN ParamTypes RPARN
+    : ID LPARN ParamTypes RPARN                 { Y_DEBUG_PRINT("DclId-1", "ID LPARN ParamTypes RPARN"); }
     ;
 
 ParamTypes
-    : VOID                          {Y_DEBUG_PRINT("ParamTypes-1-VOID"); }
-    | ParamDclRep                   {Y_DEBUG_PRINT("ParamTypes-2-ParamDclRep"); }
+    : VOID                                      { Y_DEBUG_PRINT("ParamTypes-1", "VOID"); }
+    | ParamDclRep                               { Y_DEBUG_PRINT("ParamTypes-2", "ParamDclRep"); }
     ;
 
 ParamDclRep
-    : ParamDcl                      {Y_DEBUG_PRINT("ParamDclRep-1-ParamDcl"); }
-    | ParamDclRep COMMA ParamDcl    {Y_DEBUG_PRINT("ParamDclRep-2-ParamDclRep-COMMA-ParamDcl"); }
+    : ParamDcl                                  { Y_DEBUG_PRINT("ParamDclRep-1", "ParamDcl"); }
+    | ParamDclRep COMMA ParamDcl                { Y_DEBUG_PRINT("ParamDclRep-2", "ParamDclRep COMMA ParamDcl"); }
     ;
 
 ParamDcl
-    : Type ID ParamDclBraceOpt      {Y_DEBUG_PRINT("ParamDcl-ID-ParamDclBraceOpt"); }
+    : Type ID ParamDclBraceOpt                  { Y_DEBUG_PRINT("ParamDcl-1", "Type ID ParamDclBraceOpt"); }
     ;
 
 ParamDclBraceOpt
-    :                               {Y_DEBUG_PRINT("ParamDclBraceOpt-EMPTY"); }
-    | LBRAC RBRAC                   {Y_DEBUG_PRINT("ParamDclBraceOpt-LBRAC-RBRAC"); }
+    :                                           { Y_DEBUG_PRINT("ParamDclBraceOpt-1", "Empty"); }
+    | LBRAC RBRAC                               { Y_DEBUG_PRINT("ParamDclBraceOpt-2", "LBRAC RBRAC"); }
     ;
 
 Function
-    : DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL
+    : DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-1", "DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL"); }
     ;
 
 FunctionVarDeclOpt
-    :
-    | Type VarDeclRep SEMIC
-    | StmtRep
+    :                                           { Y_DEBUG_PRINT("FunctionVarDeclOpt-1", "Empty"); }
+    | Type VarDeclList SEMIC                    { Y_DEBUG_PRINT("FunctionVarDeclOpt-2", "Type VarDeclList SEMIC"); }
+    | StmtRep                                   { Y_DEBUG_PRINT("FunctionVarDeclOpt-3", "StmtRep"); }
     ;
 
 /* imported from B-- below */
 
 Stmt
-    : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1-IF Stmt"); }
-    | IF LPARN Expr RPARN Stmt ELSE Stmt                                            { Y_DEBUG_PRINT("Stmt-2-IF-ELSE Stmt"); }
-    | WHILE LPARN Expr RPARN Stmt                                                   { Y_DEBUG_PRINT("Stmt-3-WHILE Stmt"); }
-    | FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt      { Y_DEBUG_PRINT("Stmt-4-FOR Stmt"); }
-    | RETURN StmtOptExpr SEMIC                                                      { Y_DEBUG_PRINT("Stmt-5-RETURN Stmt"); }
-    | Assign SEMIC                                                                  { Y_DEBUG_PRINT("Stmt-6-Assign Stmt"); }
-    | ID LPARN StmtId RPARN SEMIC                                                   { Y_DEBUG_PRINT("Stmt-7-ID Stmt"); }
-    | LCURL RCURL                                                                   { Y_DEBUG_PRINT("Stmt-8-LCURL RCURL Stmt"); }
-    | LCURL StmtRep RCURL                                                           { Y_DEBUG_PRINT("Stmt-9-LCURL Stmt RCURL Stmt"); }
-    | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-10-SEMIC Stmt"); }
+    : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1", "IF Stmt"); }
+    | IF LPARN Expr RPARN Stmt ELSE Stmt                                            { Y_DEBUG_PRINT("Stmt-2", "IF-ELSE Stmt"); }
+    | WHILE LPARN Expr RPARN Stmt                                                   { Y_DEBUG_PRINT("Stmt-3", "WHILE Stmt"); }
+    | FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt      { Y_DEBUG_PRINT("Stmt-4", "FOR Stmt"); }
+    | RETURN StmtOptExpr SEMIC                                                      { Y_DEBUG_PRINT("Stmt-5", "RETURN Stmt"); }
+    | Assign SEMIC                                                                  { Y_DEBUG_PRINT("Stmt-6", "Assign Stmt"); }
+    | ID LPARN StmtId RPARN SEMIC                                                   { Y_DEBUG_PRINT("Stmt-7", "ID Stmt"); }
+    | LCURL RCURL                                                                   { Y_DEBUG_PRINT("Stmt-8", "LCURL RCURL Stmt"); }
+    | LCURL StmtRep RCURL                                                           { Y_DEBUG_PRINT("Stmt-9", "LCURL Stmt RCURL Stmt"); }
+    | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-1", "-SEMIC Stmt"); }
     ;
 
 Assign
-    : ID Assign1 EQUAL Expr                 {Y_DEBUG_PRINT("Assign-1-ID-Assign1-EQUAL-Expr"); }
+    : ID Assign1 EQUAL Expr                 {Y_DEBUG_PRINT("Assign-1", "ID-Assign1-EQUAL-Expr"); }
     ;
 
 Expr
-    : SUB Expr %prec UMINUS                 { Y_DEBUG_PRINT("Expr-1-UMINUS Expr"); }
-    | ABANG Expr                            { Y_DEBUG_PRINT("Expr-2-ANABG Expr"); }
-    | Expr Logop Expr %prec PREC_LOGOP      { Y_DEBUG_PRINT("Expr-3-Expr-Logop-Expr"); }
-    | Expr Relop Expr %prec PREC_RELOP      { Y_DEBUG_PRINT("Expr-4-Expr-Relop-Expr"); }
-    | Expr Binop Expr %prec PREC_BINOP      { Y_DEBUG_PRINT("Expr-5-Expr-Binop-Expr"); }
-    | ID ExprId                             { Y_DEBUG_PRINT("Expr-6-ID"); }
-    | LPARN Expr RPARN                      { Y_DEBUG_PRINT("Expr-7-LPARN-Expr-RPARN");}
-    | INTCON                                { Y_DEBUG_PRINT("Expr-8-INTCON"); }
-    | CHARCON                               { Y_DEBUG_PRINT("Expr-9-CHARCON"); }
-    | STRINGCON                             { Y_DEBUG_PRINT("Expr-10-STRINGCON"); }
+    : SUB Expr %prec UMINUS                 { Y_DEBUG_PRINT("Expr-1", "UMINUS Expr"); }
+    | ABANG Expr                            { Y_DEBUG_PRINT("Expr-2", "ANABG Expr"); }
+    | Expr Logop Expr %prec PREC_LOGOP      { Y_DEBUG_PRINT("Expr-3", "Expr-Logop-Expr"); }
+    | Expr Relop Expr %prec PREC_RELOP      { Y_DEBUG_PRINT("Expr-4", "Expr-Relop-Expr"); }
+    | Expr Binop Expr %prec PREC_BINOP      { Y_DEBUG_PRINT("Expr-5", "Expr-Binop-Expr"); }
+    | ID ExprId                             { Y_DEBUG_PRINT("Expr-6", "ID"); }
+    | LPARN Expr RPARN                      { Y_DEBUG_PRINT("Expr-7", "LPARN-Expr-RPARN");}
+    | INTCON                                { Y_DEBUG_PRINT("Expr-8", "INTCON"); }
+    | CHARCON                               { Y_DEBUG_PRINT("Expr-9", "CHARCON"); }
+    | STRINGCON                             { Y_DEBUG_PRINT("Expr-10", "STRINGCON"); }
     | error                                 { warn(":invalid expression "); }
     ;
 
 Binop
-    : ADD                   { Y_DEBUG_PRINT("Binop-1-ADD"); }
-    | SUB                   { Y_DEBUG_PRINT("Binop-2-SUB"); }
-    | MUL                   { Y_DEBUG_PRINT("Binop-3-MUL"); }
-    | DIV                   { Y_DEBUG_PRINT("Binop-4-DIV"); }
+    : ADD                   { Y_DEBUG_PRINT("Binop-1", "ADD"); }
+    | SUB                   { Y_DEBUG_PRINT("Binop-2", "SUB"); }
+    | MUL                   { Y_DEBUG_PRINT("Binop-3", "MUL"); }
+    | DIV                   { Y_DEBUG_PRINT("Binop-4", "DIV"); }
     ;
 
 Relop
-    : EQUALS                { Y_DEBUG_PRINT("Relop-1-EQUALS"); }
-    | NOTEQU                { Y_DEBUG_PRINT("Relop-2-NOTEQU"); }
-    | LESEQU                { Y_DEBUG_PRINT("Relop-3-LESEQU"); }
-    | LESSTH                { Y_DEBUG_PRINT("Relop-6-LESSTH"); }
-    | GREEQU                { Y_DEBUG_PRINT("Relop-4-GREEQU"); }
-    | GREATE                { Y_DEBUG_PRINT("Relop-5-GREATE"); }
+    : EQUALS                { Y_DEBUG_PRINT("Relop-1", "EQUALS"); }
+    | NOTEQU                { Y_DEBUG_PRINT("Relop-2", "NOTEQU"); }
+    | LESEQU                { Y_DEBUG_PRINT("Relop-3", "LESEQU"); }
+    | LESSTH                { Y_DEBUG_PRINT("Relop-6", "LESSTH"); }
+    | GREEQU                { Y_DEBUG_PRINT("Relop-4", "GREEQU"); }
+    | GREATE                { Y_DEBUG_PRINT("Relop-5", "GREATE"); }
     ;
 
 Logop
-    : ANDCOM                { Y_DEBUG_PRINT("Logop-1-ANDCOM"); }
-    | ORCOMP                { Y_DEBUG_PRINT("Logop-2-ORCOMP"); }
+    : ANDCOM                { Y_DEBUG_PRINT("Logop-1", "ANDCOM"); }
+    | ORCOMP                { Y_DEBUG_PRINT("Logop-2", "ORCOMP"); }
     ;
 
 /* util bodies below from the imported B-- */
 
 StmtForAssign
     :
-    | Assign                { Y_DEBUG_PRINT("StmtForAssign -> Assign"); }
+    | Assign                { Y_DEBUG_PRINT("StmtForAssign", "Assign"); }
     ;
 
 StmtOptExpr
     :
-    | Expr                  { Y_DEBUG_PRINT("StmtOptExpr -> Expr"); }
+    | Expr                  { Y_DEBUG_PRINT("StmtOptExpr", "Expr"); }
     ;
 
 StmtId
     :
-    | ExprList              { Y_DEBUG_PRINT("StmtId -> ExprList"); }
+    | ExprList              { Y_DEBUG_PRINT("StmtId", "ExprList"); }
     ;
 
 StmtRep
-    : Stmt                  { Y_DEBUG_PRINT("StmtRep-1 -> Stmt"); }
-    | StmtRep Stmt          { Y_DEBUG_PRINT("StmtRep-2 -> StmtRep Stmt"); }
+    : Stmt                  { Y_DEBUG_PRINT("StmtRep-1", "Stmt"); }
+    | StmtRep Stmt          { Y_DEBUG_PRINT("StmtRep-2", "StmtRep Stmt"); }
     ;
 
 Assign1
-    :                       { Y_DEBUG_PRINT("Assign1-1-Empty"); }
-    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("Assign1-2-LBRAC-Expr-RBRAC"); }
+    :                       { Y_DEBUG_PRINT("Assign1", "1-Empty"); }
+    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("Assign1", "2-LBRAC-Expr-RBRAC"); }
     ;
 
 ExprId
-    :                       { Y_DEBUG_PRINT("ExprId-1-Empty"); }
-    | LPARN StmtId RPARN    { Y_DEBUG_PRINT("ExprId-2-LPARN-StmtId-RPARN"); }
-    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("ExprId-3-LBRAC-Expr-RBRAC"); }
-    | error RBRAC           { Y_DEBUG_PRINT("ExprId-4-error-RBRAC"); }
+    :                       { Y_DEBUG_PRINT("ExprId-1", "Empty"); }
+    | LPARN StmtId RPARN    { Y_DEBUG_PRINT("ExprId-2", "LPARN-StmtId-RPARN"); }
+    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("ExprId-3", "LBRAC-Expr-RBRAC"); }
+    | error RBRAC           { Y_DEBUG_PRINT("ExprId-4", "error-RBRAC"); }
     ;
 
 ExprList
-    : Expr                  { Y_DEBUG_PRINT("ExprList-1 -> Expr"); }
-    | ExprList COMMA Expr   { Y_DEBUG_PRINT("ExprList-2 -> ExprList-COMMA-Expr"); }
+    : Expr                  { Y_DEBUG_PRINT("ExprList-1", "Expr"); }
+    | ExprList COMMA Expr   { Y_DEBUG_PRINT("ExprList-2", "ExprList-COMMA-Expr"); }
     ;
 
 %%
