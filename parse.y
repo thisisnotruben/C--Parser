@@ -64,7 +64,8 @@ ProgFuncRep
 
 Dcl
     : Type VarDeclList                          { Y_DEBUG_PRINT("Dcl-1", "Type VarDeclList"); }
-    | DclExternOpt DclTypeOrVoidOpt DclIdRep    { Y_DEBUG_PRINT("Dcl-2", "DclExternOpt DclTypeOrVoidOpt DclIdRep"); }
+    | EXTERN DclTypeOrVoidOpt DclIdRep          { Y_DEBUG_PRINT("Dcl-2", "EXTERN DclTypeOrVoidOpt DclIdRep"); }
+    | DclTypeOrVoidOpt DclIdRep                 { Y_DEBUG_PRINT("Dcl-3", "DclExternOpt DclTypeOrVoidOpt DclIdRep"); }
     ;
 
 VarDecl
@@ -80,11 +81,6 @@ Type
 VarDeclList
     : VarDecl                                   { Y_DEBUG_PRINT("VarDeclList-1", "VarDecl"); }
     | VarDeclList COMMA VarDecl                 { Y_DEBUG_PRINT("VarDeclList-2", "VarDeclList COMMA VarDecl"); }
-    ;
-
-DclExternOpt
-    :                                           { Y_DEBUG_PRINT("DclExternOpt-1", "Empty"); }
-    | EXTERN                                    { Y_DEBUG_PRINT("DclExternOpt-2", "EXTERN"); }
     ;
 
 DclTypeOrVoidOpt
