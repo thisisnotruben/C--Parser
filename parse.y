@@ -64,8 +64,12 @@ ProgFuncRep
 
 Dcl
     : Type VarDeclList                          { Y_DEBUG_PRINT("Dcl-1", "Type VarDeclList"); }
-    | EXTERN DclTypeOrVoidOpt DclIdRep          { Y_DEBUG_PRINT("Dcl-2", "EXTERN DclTypeOrVoidOpt DclIdRep"); }
-    | DclTypeOrVoidOpt DclIdRep                 { Y_DEBUG_PRINT("Dcl-3", "DclExternOpt DclTypeOrVoidOpt DclIdRep"); }
+    | Type DclIdRep                             { Y_DEBUG_PRINT("Dcl-2", "Type DclIdRep"); }
+    | VOID DclIdRep                             { Y_DEBUG_PRINT("Dcl-3", "VOID DclIdRep"); }
+    | DclIdRep                                  { Y_DEBUG_PRINT("Dcl-4", "DclIdRep"); }
+    | EXTERN Type DclIdRep                      { Y_DEBUG_PRINT("Dcl-5", "EXTERN Type DclIdRep"); }
+    | EXTERN VOID DclIdRep                      { Y_DEBUG_PRINT("Dcl-6", "EXTERN VOID DclIdRep"); }
+    | EXTERN DclIdRep                           { Y_DEBUG_PRINT("Dcl-7", "EXTERN DclIdRep"); }
     ;
 
 VarDecl
@@ -81,12 +85,6 @@ Type
 VarDeclList
     : VarDecl                                   { Y_DEBUG_PRINT("VarDeclList-1", "VarDecl"); }
     | VarDeclList COMMA VarDecl                 { Y_DEBUG_PRINT("VarDeclList-2", "VarDeclList COMMA VarDecl"); }
-    ;
-
-DclTypeOrVoidOpt
-    :                                           { Y_DEBUG_PRINT("DclTypeOrVoidOpt-1", "Empty"); }
-    | Type                                      { Y_DEBUG_PRINT("DclTypeOrVoidOpt-2", "Type"); }
-    | VOID                                      { Y_DEBUG_PRINT("DclTypeOrVoidOpt-3", "VOID"); }
     ;
 
 DclIdRep
@@ -118,12 +116,9 @@ ParamDclBraceOpt
     ;
 
 Function
-    : FunctionHead LCURL FunctionVarDeclOpt RCURL   { Y_DEBUG_PRINT("Function-1", "FunctionHead LCURL FunctionVarDeclOpt RCURL"); }
-    | FunctionHead SEMIC                            { Y_DEBUG_PRINT("Function-2", "FunctionHead SEMIC"); }
-    ;
-
-FunctionHead
-    : DclTypeOrVoidOpt DclId
+    : DclId LCURL FunctionVarDeclOpt RCURL          { Y_DEBUG_PRINT("Function-1", "DclId LCURL FunctionVarDeclOpt RCURL"); }
+    | Type DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-2", "Type DclId LCURL FunctionVarDeclOpt RCURL"); }
+    | VOID DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-3", "VOID DclId LCURL FunctionVarDeclOpt RCURL"); }
     ;
 
 FunctionVarDeclOpt
