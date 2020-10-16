@@ -2,11 +2,11 @@
 
 #include <stdio.h>
 
-#define YDEBUG 1
+#define YDEBUG 0
 
 #define Y_DEBUG_PRINT(x, y) \
     if (YDEBUG) \
-        printf("%-25s%-25s ln: %d\n ", x, y, input_line_nbr)
+        printf("%-30s%-30s ln: %d\n", x, y, input_line_nbr)
 
 #ifndef YDEBUG
     #undef Y_DEBUG_PRINT(x)
@@ -47,14 +47,14 @@ extern int lex_state;
 %%
 
 Prog
-    : 
-    | ProgDclRep
-    | ProgFuncRep
+    :                                           { Y_DEBUG_PRINT("Prog-1", "Empty"); }
+    | ProgDclRep                                { Y_DEBUG_PRINT("Prog-2", "ProgDclRep"); }
+    | ProgFuncRep                               { Y_DEBUG_PRINT("Prog-3", "ProgFuncRep"); }
     ;
 
 ProgDclRep
     : Dcl SEMIC                                 { Y_DEBUG_PRINT("ProgDclRep-1", "Dcl SEMIC"); }
-    | ProgDclRep Dcl                            { Y_DEBUG_PRINT("ProgDclRep-2", "ProgDclRep Dcl"); }
+    | ProgDclRep Dcl SEMIC                      { Y_DEBUG_PRINT("ProgDclRep-2", "ProgDclRep Dcl SEMIC"); }
     ;
 
 ProgFuncRep
@@ -122,7 +122,12 @@ ParamDclBraceOpt
     ;
 
 Function
-    : DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-1", "DclTypeOrVoidOpt DclId LCURL FunctionVarDeclOpt RCURL"); }
+    : FunctionHead LCURL FunctionVarDeclOpt RCURL   { Y_DEBUG_PRINT("Function-1", "FunctionHead LCURL FunctionVarDeclOpt RCURL"); }
+    | FunctionHead SEMIC                            { Y_DEBUG_PRINT("Function-2", "FunctionHead SEMIC"); }
+    ;
+
+FunctionHead
+    : DclTypeOrVoidOpt DclId
     ;
 
 FunctionVarDeclOpt
