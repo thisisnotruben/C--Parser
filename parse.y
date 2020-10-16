@@ -48,18 +48,17 @@ extern int lex_state;
 
 Prog
     :                                           { Y_DEBUG_PRINT("Prog-1", "Empty"); }
-    | ProgDclRep                                { Y_DEBUG_PRINT("Prog-2", "ProgDclRep"); }
-    | ProgFuncRep                               { Y_DEBUG_PRINT("Prog-3", "ProgFuncRep"); }
+    | ProgEitherList                            { Y_DEBUG_PRINT("Prog-2", "ProgEitherList"); }
     ;
 
-ProgDclRep
-    : Dcl SEMIC                                 { Y_DEBUG_PRINT("ProgDclRep-1", "Dcl SEMIC"); }
-    | ProgDclRep Dcl SEMIC                      { Y_DEBUG_PRINT("ProgDclRep-2", "ProgDclRep Dcl SEMIC"); }
+ProgEitherList
+    : ProgEither                                { Y_DEBUG_PRINT("ProgEitherList-1", "ProgEither"); }
+    | ProgEitherList ProgEither                 { Y_DEBUG_PRINT("ProgEitherList-2", "ProgEitherList ProgEither"); }
     ;
 
-ProgFuncRep
-    : Function                                  { Y_DEBUG_PRINT("ProgFuncRep-1", "Function"); }
-    | ProgFuncRep Function                      { Y_DEBUG_PRINT("ProgFuncRep-2", "ProgFuncRep Function"); }
+ProgEither
+    : Dcl SEMIC                                 { Y_DEBUG_PRINT("ProgEither-1", "Dcl SEMIC"); }
+    | Function                                  { Y_DEBUG_PRINT("ProgEither-2", "Function"); }
     ;
 
 Dcl
@@ -74,7 +73,7 @@ Dcl
 
 VarDecl
     : ID                                        { Y_DEBUG_PRINT("VarDecl-1", "ID"); }
-    | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); } /* TODO: shift reduce conflict here */
+    | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); }
     ;
 
 Type
@@ -116,15 +115,24 @@ ParamDclBraceOpt
     ;
 
 Function
-    : DclId LCURL FunctionVarDeclOpt RCURL          { Y_DEBUG_PRINT("Function-1", "DclId LCURL FunctionVarDeclOpt RCURL"); }
-    | Type DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-2", "Type DclId LCURL FunctionVarDeclOpt RCURL"); }
-    | VOID DclId LCURL FunctionVarDeclOpt RCURL     { Y_DEBUG_PRINT("Function-3", "VOID DclId LCURL FunctionVarDeclOpt RCURL"); }
+    : DclId LCURL FunctionEitherListOpt RCURL          { Y_DEBUG_PRINT("Function-1", "DclId LCURL FunctionEitherListOpt RCURL"); }
+    | Type DclId LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("Function-2", "Type DclId LCURL FunctionEitherListOpt RCURL"); }
+    | VOID DclId LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("Function-3", "VOID DclId LCURL FunctionEitherListOpt RCURL"); }
     ;
 
-FunctionVarDeclOpt
-    :                                           { Y_DEBUG_PRINT("FunctionVarDeclOpt-1", "Empty"); }
-    | Type VarDeclList SEMIC                    { Y_DEBUG_PRINT("FunctionVarDeclOpt-2", "Type VarDeclList SEMIC"); }
-    | StmtRep                                   { Y_DEBUG_PRINT("FunctionVarDeclOpt-3", "StmtRep"); }
+FunctionEitherListOpt
+    :                                           { Y_DEBUG_PRINT("FunctionEitherListOpt-1", "Empty"); }
+    | FunctionEitherList                        { Y_DEBUG_PRINT("FunctionEitherListOpt-2", "FunctionEitherList"); }
+    ;
+
+FunctionEitherList
+    : FunctionEither                            { Y_DEBUG_PRINT("FunctionEitherList-1", "FunctionEither"); }
+    | FunctionEitherList FunctionEither         { Y_DEBUG_PRINT("FunctionEitherList-2", "FunctionEitherList FunctionEither"); }
+    ;
+
+FunctionEither
+    : Dcl SEMIC                                 { Y_DEBUG_PRINT("FunctionEither-1", "Dcl SEMIC"); }
+    | Stmt                                      { Y_DEBUG_PRINT("FunctionEither-2", "Stmt"); }
     ;
 
 /* imported from B-- below */
