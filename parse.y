@@ -34,6 +34,7 @@ extern int lex_state;
 %nonassoc PREC_LOGOP
 %nonassoc PREC_RELOP
 %nonassoc PREC_BINOP
+%nonassoc PREC_ERROR
 
 %left ORCOMP
 %left ANDCOM
@@ -64,7 +65,7 @@ ProgEither
 DclSemic
     : Dcl SEMIC                                 { Y_DEBUG_PRINT("DclSemic", "Dcl SEMIC"); }
     | Dcl error                                 { warn(": missing SEMIC"); }
-    /*| error                                     { warn(": missing COMMA"); } *//*TODO: need a better way of detecting this*/
+    | error                                     { warn(": missing COMMA"); }
     ;
 
 Dcl
@@ -81,7 +82,7 @@ VarDecl
     : ID                                        { Y_DEBUG_PRINT("VarDecl-1", "ID"); }
     | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); }
     | ID LBRAC error                            { warn(": missing RBRAC"); }
-    | ID RBRAC                                  { warn(": missing LBRAC"); } 
+    | ID RBRAC                                  { warn(": missing LBRAC"); } /* TODO */
     ;
 
 Type
@@ -121,7 +122,7 @@ ParamDcl
 ParamDclBraceOpt
     :                                           { Y_DEBUG_PRINT("ParamDclBraceOpt-1", "Empty"); }
     | LBRAC RBRAC                               { Y_DEBUG_PRINT("ParamDclBraceOpt-2", "LBRAC RBRAC"); }
-    | LBRAC                                     { warn(": missing RBRAC"); }
+    | LBRAC                                     { warn(": missing RBRAC"); } /* TODO */
     ;
 
 Function
@@ -135,9 +136,9 @@ FunctionHead
     ;
 
 FunctionBody
-    : LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("FunctionBody-1", "LCURL FunctionEitherListOpt RCURL"); }
-    | RCURL                                 { warn(": missing LCURL"); }
-    | LCURL FunctionEitherListOpt error     { warn(": missing RCURL"); } /* Intoduced 6 conflicts with `DclSemic: error` */ 
+    : LCURL FunctionEitherListOpt RCURL         { Y_DEBUG_PRINT("FunctionBody-1", "LCURL FunctionEitherListOpt RCURL"); }
+    | RCURL                                     { warn(": missing LCURL"); } /* TODO */
+    | LCURL error                               { warn(": missing RCURL"); }
     ;
 
 FunctionEitherListOpt
@@ -160,21 +161,23 @@ FunctionEither
 Stmt
     : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1", "IF LPARN Expr RPARN Stmt"); }
     | IF LPARN Expr RPARN Stmt ELSE Stmt                                            { Y_DEBUG_PRINT("Stmt-2", "IF LPARN Expr RPARN Stmt ELSE Stmt"); }
+    | IF error                                                                      { warn(": malformed if"); }
     | WHILE LPARN Expr RPARN Stmt                                                   { Y_DEBUG_PRINT("Stmt-3", "WHILE LPARN Expr RPARN Stmt"); }
     | FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt      { Y_DEBUG_PRINT("Stmt-4", "FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt"); }
+    | FOR LPARN error RPARN Stmt                                                    { warn(": malformed for-loop"); }
     | RETURN StmtOptExpr SEMIC                                                      { Y_DEBUG_PRINT("Stmt-5", "RETURN StmtOptExpr SEMIC"); }
     | Assign SEMIC                                                                  { Y_DEBUG_PRINT("Stmt-6", "Assign SEMIC"); }
     | Assign error                                                                  { warn(": missing SEMIC"); } /* Intoduced 1 conflicts at `Expr: ID . ExprId` */
     | ID LPARN StmtId RPARN SEMIC                                                   { Y_DEBUG_PRINT("Stmt-7", "ID LPARN StmtId RPARN SEMIC"); }
     | ID LPARN StmtId RPARN error                                                   { warn(": missing SEMIC"); }
     | LCURL StmtListOpt RCURL                                                       { Y_DEBUG_PRINT("Stmt-8", "LCURL StmtListOpt RCURL"); }
-/*    | error StmtList LCURL                                                                    { warn(": missing LCURL"); } */
+    /*| LCURL StmtListOpt RCURL                                                     { warn(": missing LCURL"); } */
     | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-9", "SEMIC"); }
     ;
 
 StmtListOpt
-    :                                       { Y_DEBUG_PRINT("StmtListOpt", "Empty"); }
-    | StmtList                              { Y_DEBUG_PRINT("StmtListOpt", "StmtList"); }
+    :                                       { Y_DEBUG_PRINT("StmtListOpt-1", "Empty"); }
+    | StmtList                              { Y_DEBUG_PRINT("StmtListOpt-2", "StmtList"); }
     ;
 
 Assign
@@ -187,12 +190,13 @@ Expr
     | Expr Logop Expr %prec PREC_LOGOP      { Y_DEBUG_PRINT("Expr-3", "Expr Logop Expr"); }
     | Expr Relop Expr %prec PREC_RELOP      { Y_DEBUG_PRINT("Expr-4", "Expr Relop Expr"); }
     | Expr Binop Expr %prec PREC_BINOP      { Y_DEBUG_PRINT("Expr-5", "Expr Binop Expr"); }
+  /*| Expr Expr %prec PREC_ERROR            { warn(": missing operator"); } */
     | ID ExprId                             { Y_DEBUG_PRINT("Expr-6", "ID ExprId"); }
     | LPARN Expr RPARN                      { Y_DEBUG_PRINT("Expr-7", "LPARN Expr RPARN");}
     | INTCON                                { Y_DEBUG_PRINT("Expr-8", "INTCON"); }
     | CHARCON                               { Y_DEBUG_PRINT("Expr-9", "CHARCON"); }
     | STRINGCON                             { Y_DEBUG_PRINT("Expr-10", "STRINGCON"); }
-    /*| error                                 { warn(": invalid expression "); } */
+    | error                                 { warn(": invalid expression "); }
     ;
 
 Binop
@@ -241,6 +245,7 @@ StmtList
 Assign1
     :                       { Y_DEBUG_PRINT("Assign1-1", "Empty"); }
     | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("Assign1-2", "LBRAC Expr RBRAC"); }
+    | error RBRAC           { warn(": missing LBRAC"); }
     ;
 
 ExprId

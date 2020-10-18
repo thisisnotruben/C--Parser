@@ -18,10 +18,7 @@
 Switch `DEBUG_LEX` to `1` in [parse.l](parse.l)
 
 ```bash
-# to run specific test in 'testcases/'
-./test.sh $testFile
-
-# to run all tests and output to 'resultS.txt'
+# to run all tests and output to 'results/resultS.txt'
 ./test.sh s
 ```
 
@@ -32,8 +29,11 @@ Switch `DEBUG_LEX` to `0` in [parse.l](parse.l)
 Switch `YDEBUG` to `1` in [parse.y](parse.y) for debug output or `0` to cease all output
 
 ```bash
-# to run all tests and output to 'resultP.txt'
+# to run all tests and output to 'results/resultP.txt'
 ./test.sh p
+
+# to run all error tests and output errors to 'results/resultPE.txt'
+./test.sh e
 ```
 
 ## Test Usage
