@@ -82,6 +82,7 @@ stringcon           \"({ch}|\n)[^\"]+\"
 
     \"              { DEBUG_PRINT("STRINGCON", STRINGCON); BEGIN(INITIAL); return STRINGCON; }
     [^\"\n]         { yymore(); }
+    <<EOF>>         { lex_state = 2; yyterminate(); }
 
 }
 
@@ -90,6 +91,7 @@ stringcon           \"({ch}|\n)[^\"]+\"
     "*/"            { DEBUG_PRINT("COMMENT", COMMENTCON); BEGIN(INITIAL); }
     {eol}           { yymore(); input_line_nbr++; }
     {anything}      { yymore(); }
+    <<EOF>>         { lex_state = 1; yyterminate(); }
 
 }
 

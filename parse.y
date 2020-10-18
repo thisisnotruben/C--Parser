@@ -57,8 +57,14 @@ ProgEitherList
     ;
 
 ProgEither
-    : Dcl SEMIC                                 { Y_DEBUG_PRINT("ProgEither-1", "Dcl SEMIC"); }
+    : DclSemic                                  { Y_DEBUG_PRINT("ProgEither-1", "DclSemic"); }
     | Function                                  { Y_DEBUG_PRINT("ProgEither-2", "Function"); }
+    ;
+
+DclSemic
+    : Dcl SEMIC                                 { Y_DEBUG_PRINT("DclSemic", "Dcl SEMIC"); }
+    | Dcl error                                 { warn(": missing SEMIC"); }
+    /*| error                                     { warn(": missing COMMA"); } *//*TODO: need a better way of detecting this*/
     ;
 
 Dcl
@@ -74,6 +80,8 @@ Dcl
 VarDecl
     : ID                                        { Y_DEBUG_PRINT("VarDecl-1", "ID"); }
     | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); }
+    | ID LBRAC error                            { warn(": missing RBRAC"); }
+    | ID RBRAC                                  { warn(": missing LBRAC"); } 
     ;
 
 Type
@@ -93,6 +101,7 @@ DclIdRep
 
 DclId
     : ID LPARN ParamTypes RPARN                 { Y_DEBUG_PRINT("DclId-1", "ID LPARN ParamTypes RPARN"); }
+    | ID LPARN error RPARN                      { warn(": missing ParamTypes"); }
     ;
 
 ParamTypes
@@ -112,12 +121,23 @@ ParamDcl
 ParamDclBraceOpt
     :                                           { Y_DEBUG_PRINT("ParamDclBraceOpt-1", "Empty"); }
     | LBRAC RBRAC                               { Y_DEBUG_PRINT("ParamDclBraceOpt-2", "LBRAC RBRAC"); }
+    | LBRAC                                     { warn(": missing RBRAC"); }
     ;
 
 Function
-    : DclId LCURL FunctionEitherListOpt RCURL          { Y_DEBUG_PRINT("Function-1", "DclId LCURL FunctionEitherListOpt RCURL"); }
-    | Type DclId LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("Function-2", "Type DclId LCURL FunctionEitherListOpt RCURL"); }
-    | VOID DclId LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("Function-3", "VOID DclId LCURL FunctionEitherListOpt RCURL"); }
+    : FunctionHead FunctionBody                 { Y_DEBUG_PRINT("Function-1", "FunctionHead FunctionBody"); }
+    ;
+
+FunctionHead
+    : DclId                                     { Y_DEBUG_PRINT("FunctionHead-1", "DclId"); }
+    | Type DclId                                { Y_DEBUG_PRINT("FunctionHead-2", "Type DclId"); }
+    | VOID DclId                                { Y_DEBUG_PRINT("FunctionHead-3", "VOID DclId"); }
+    ;
+
+FunctionBody
+    : LCURL FunctionEitherListOpt RCURL     { Y_DEBUG_PRINT("FunctionBody-1", "LCURL FunctionEitherListOpt RCURL"); }
+    | RCURL                                 { warn(": missing LCURL"); }
+    | LCURL FunctionEitherListOpt error     { warn(": missing RCURL"); } /* Intoduced 6 conflicts with `DclSemic: error` */ 
     ;
 
 FunctionEitherListOpt
@@ -131,41 +151,48 @@ FunctionEitherList
     ;
 
 FunctionEither
-    : Dcl SEMIC                                 { Y_DEBUG_PRINT("FunctionEither-1", "Dcl SEMIC"); }
+    : DclSemic                                  { Y_DEBUG_PRINT("FunctionEither-1", "DclSemic"); }
     | Stmt                                      { Y_DEBUG_PRINT("FunctionEither-2", "Stmt"); }
     ;
 
 /* imported from B-- below */
 
 Stmt
-    : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1", "IF Stmt"); }
-    | IF LPARN Expr RPARN Stmt ELSE Stmt                                            { Y_DEBUG_PRINT("Stmt-2", "IF-ELSE Stmt"); }
-    | WHILE LPARN Expr RPARN Stmt                                                   { Y_DEBUG_PRINT("Stmt-3", "WHILE Stmt"); }
-    | FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt      { Y_DEBUG_PRINT("Stmt-4", "FOR Stmt"); }
-    | RETURN StmtOptExpr SEMIC                                                      { Y_DEBUG_PRINT("Stmt-5", "RETURN Stmt"); }
-    | Assign SEMIC                                                                  { Y_DEBUG_PRINT("Stmt-6", "Assign Stmt"); }
-    | ID LPARN StmtId RPARN SEMIC                                                   { Y_DEBUG_PRINT("Stmt-7", "ID Stmt"); }
-    | LCURL RCURL                                                                   { Y_DEBUG_PRINT("Stmt-8", "LCURL RCURL Stmt"); }
-    | LCURL StmtRep RCURL                                                           { Y_DEBUG_PRINT("Stmt-9", "LCURL Stmt RCURL Stmt"); }
-    | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-1", "-SEMIC Stmt"); }
+    : IF LPARN Expr RPARN Stmt %prec PREC_LOWER_THAN_ELSE                           { Y_DEBUG_PRINT("Stmt-1", "IF LPARN Expr RPARN Stmt"); }
+    | IF LPARN Expr RPARN Stmt ELSE Stmt                                            { Y_DEBUG_PRINT("Stmt-2", "IF LPARN Expr RPARN Stmt ELSE Stmt"); }
+    | WHILE LPARN Expr RPARN Stmt                                                   { Y_DEBUG_PRINT("Stmt-3", "WHILE LPARN Expr RPARN Stmt"); }
+    | FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt      { Y_DEBUG_PRINT("Stmt-4", "FOR LPARN StmtForAssign SEMIC StmtOptExpr SEMIC StmtForAssign RPARN Stmt"); }
+    | RETURN StmtOptExpr SEMIC                                                      { Y_DEBUG_PRINT("Stmt-5", "RETURN StmtOptExpr SEMIC"); }
+    | Assign SEMIC                                                                  { Y_DEBUG_PRINT("Stmt-6", "Assign SEMIC"); }
+    | Assign error                                                                  { warn(": missing SEMIC"); } /* Intoduced 1 conflicts at `Expr: ID . ExprId` */
+    | ID LPARN StmtId RPARN SEMIC                                                   { Y_DEBUG_PRINT("Stmt-7", "ID LPARN StmtId RPARN SEMIC"); }
+    | ID LPARN StmtId RPARN error                                                   { warn(": missing SEMIC"); }
+    | LCURL StmtListOpt RCURL                                                       { Y_DEBUG_PRINT("Stmt-8", "LCURL StmtListOpt RCURL"); }
+/*    | error StmtList LCURL                                                                    { warn(": missing LCURL"); } */
+    | SEMIC                                                                         { Y_DEBUG_PRINT("Stmt-9", "SEMIC"); }
+    ;
+
+StmtListOpt
+    :                                       { Y_DEBUG_PRINT("StmtListOpt", "Empty"); }
+    | StmtList                              { Y_DEBUG_PRINT("StmtListOpt", "StmtList"); }
     ;
 
 Assign
-    : ID Assign1 EQUAL Expr                 {Y_DEBUG_PRINT("Assign-1", "ID-Assign1-EQUAL-Expr"); }
+    : ID Assign1 EQUAL Expr                 { Y_DEBUG_PRINT("Assign", "ID Assign1 EQUAL Expr"); }
     ;
 
 Expr
     : SUB Expr %prec UMINUS                 { Y_DEBUG_PRINT("Expr-1", "UMINUS Expr"); }
-    | ABANG Expr                            { Y_DEBUG_PRINT("Expr-2", "ANABG Expr"); }
-    | Expr Logop Expr %prec PREC_LOGOP      { Y_DEBUG_PRINT("Expr-3", "Expr-Logop-Expr"); }
-    | Expr Relop Expr %prec PREC_RELOP      { Y_DEBUG_PRINT("Expr-4", "Expr-Relop-Expr"); }
-    | Expr Binop Expr %prec PREC_BINOP      { Y_DEBUG_PRINT("Expr-5", "Expr-Binop-Expr"); }
-    | ID ExprId                             { Y_DEBUG_PRINT("Expr-6", "ID"); }
-    | LPARN Expr RPARN                      { Y_DEBUG_PRINT("Expr-7", "LPARN-Expr-RPARN");}
+    | ABANG Expr                            { Y_DEBUG_PRINT("Expr-2", "ABANG Expr"); }
+    | Expr Logop Expr %prec PREC_LOGOP      { Y_DEBUG_PRINT("Expr-3", "Expr Logop Expr"); }
+    | Expr Relop Expr %prec PREC_RELOP      { Y_DEBUG_PRINT("Expr-4", "Expr Relop Expr"); }
+    | Expr Binop Expr %prec PREC_BINOP      { Y_DEBUG_PRINT("Expr-5", "Expr Binop Expr"); }
+    | ID ExprId                             { Y_DEBUG_PRINT("Expr-6", "ID ExprId"); }
+    | LPARN Expr RPARN                      { Y_DEBUG_PRINT("Expr-7", "LPARN Expr RPARN");}
     | INTCON                                { Y_DEBUG_PRINT("Expr-8", "INTCON"); }
     | CHARCON                               { Y_DEBUG_PRINT("Expr-9", "CHARCON"); }
     | STRINGCON                             { Y_DEBUG_PRINT("Expr-10", "STRINGCON"); }
-    | error                                 { warn(":invalid expression "); }
+    /*| error                                 { warn(": invalid expression "); } */
     ;
 
 Binop
@@ -193,39 +220,39 @@ Logop
 
 StmtForAssign
     :
-    | Assign                { Y_DEBUG_PRINT("StmtForAssign", "Assign"); }
+    | Assign                { Y_DEBUG_PRINT("StmtForAssign-1", "Assign"); }
     ;
 
 StmtOptExpr
     :
-    | Expr                  { Y_DEBUG_PRINT("StmtOptExpr", "Expr"); }
+    | Expr                  { Y_DEBUG_PRINT("StmtOptExpr-1", "Expr"); }
     ;
 
 StmtId
-    :
-    | ExprList              { Y_DEBUG_PRINT("StmtId", "ExprList"); }
+    :                       { Y_DEBUG_PRINT("StmtId-1", "Empty"); }
+    | ExprList              { Y_DEBUG_PRINT("StmtId-2", "ExprList"); }
     ;
 
-StmtRep
-    : Stmt                  { Y_DEBUG_PRINT("StmtRep-1", "Stmt"); }
-    | StmtRep Stmt          { Y_DEBUG_PRINT("StmtRep-2", "StmtRep Stmt"); }
+StmtList
+    : Stmt                   { Y_DEBUG_PRINT("StmtList-1", "Stmt"); }
+    | StmtList Stmt          { Y_DEBUG_PRINT("StmtList-2", "StmtList Stmt"); }
     ;
 
 Assign1
-    :                       { Y_DEBUG_PRINT("Assign1", "1-Empty"); }
-    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("Assign1", "2-LBRAC-Expr-RBRAC"); }
+    :                       { Y_DEBUG_PRINT("Assign1-1", "Empty"); }
+    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("Assign1-2", "LBRAC Expr RBRAC"); }
     ;
 
 ExprId
     :                       { Y_DEBUG_PRINT("ExprId-1", "Empty"); }
-    | LPARN StmtId RPARN    { Y_DEBUG_PRINT("ExprId-2", "LPARN-StmtId-RPARN"); }
-    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("ExprId-3", "LBRAC-Expr-RBRAC"); }
-    | error RBRAC           { Y_DEBUG_PRINT("ExprId-4", "error-RBRAC"); }
+    | LPARN StmtId RPARN    { Y_DEBUG_PRINT("ExprId-2", "LPARN StmtId RPARN"); }
+    | LBRAC Expr RBRAC      { Y_DEBUG_PRINT("ExprId-3", "LBRAC Expr RBRAC"); }
+    | error RBRAC           { Y_DEBUG_PRINT("ExprId-4", "error RBRAC"); }
     ;
 
 ExprList
     : Expr                  { Y_DEBUG_PRINT("ExprList-1", "Expr"); }
-    | ExprList COMMA Expr   { Y_DEBUG_PRINT("ExprList-2", "ExprList-COMMA-Expr"); }
+    | ExprList COMMA Expr   { Y_DEBUG_PRINT("ExprList-2", "ExprList COMMA Expr"); }
     ;
 
 %%
@@ -234,13 +261,14 @@ int main(int argc, char **argv)
 {
     int result = yyparse();
 
-    if (lex_state == 1)
+    switch(lex_state)
     {
-        yyerror("End of file within a comment\n");
-    }
-    else if (lex_state == 2)
-    {
-        yyerror("End of file within a string\n");
+        case 1:
+            yyerror("End of file within a comment\n");
+            break;
+        case 2:
+            yyerror("End of file within a string\n");
+            break;
     }
 
     return result;
@@ -248,6 +276,6 @@ int main(int argc, char **argv)
 
 int yywrap() { return 1; }
 
-void yyerror(char const *s) { fprintf(stderr, "%s on line %d\n", s, input_line_nbr); }
+void yyerror(char const *s) { fprintf(stderr, "%s on line %d", s, input_line_nbr); }
 
 void warn(char const *s) { fprintf(stderr, "%s\n", s); }
