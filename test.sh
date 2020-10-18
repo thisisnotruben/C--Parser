@@ -105,6 +105,10 @@ function showHelpPrompt {
 	echo "e: testAllParserErrors"$NL
 }
 
+if [ ! -d $RESULTS_DIR ]; then
+	mkdir $RESULTS_DIR
+fi
+
 if [ ${#@} -eq 0 ]; then
 	showHelpPrompt
 
