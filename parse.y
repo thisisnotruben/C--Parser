@@ -82,7 +82,7 @@ VarDecl
     : ID                                        { Y_DEBUG_PRINT("VarDecl-1", "ID"); }
     | ID LBRAC INTCON RBRAC                     { Y_DEBUG_PRINT("VarDecl-2", "ID LBRAC INTCON RBRAC"); }
     | ID LBRAC error                            { warn(": missing RBRAC"); }
-    | ID RBRAC                                  { warn(": missing LBRAC"); } /* TODO */
+    | ID RBRAC                                  { yyerror(": missing LBRAC\n"); }
     ;
 
 Type
@@ -122,7 +122,7 @@ ParamDcl
 ParamDclBraceOpt
     :                                           { Y_DEBUG_PRINT("ParamDclBraceOpt-1", "Empty"); }
     | LBRAC RBRAC                               { Y_DEBUG_PRINT("ParamDclBraceOpt-2", "LBRAC RBRAC"); }
-    | LBRAC                                     { warn(": missing RBRAC"); } /* TODO */
+    | LBRAC                                     { yyerror(": missing RBRAC\n"); }
     ;
 
 Function
@@ -137,7 +137,7 @@ FunctionHead
 
 FunctionBody
     : LCURL FunctionEitherListOpt RCURL         { Y_DEBUG_PRINT("FunctionBody-1", "LCURL FunctionEitherListOpt RCURL"); }
-    | RCURL                                     { warn(": missing LCURL"); } /* TODO */
+    | RCURL                                     { yyerror(": missing LCURL\n"); }
     | LCURL error                               { warn(": missing RCURL"); }
     ;
 
